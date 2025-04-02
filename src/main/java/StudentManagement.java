@@ -28,6 +28,10 @@ public class StudentManagement {
         System.out.print("Enter student grade: ");
         int grade = scanner.nextInt();
 
+        if (students.stream().anyMatch(student -> student.getStudentId() == studentId)) {
+            System.out.println("This ID belongs to an existing student.");
+        }
+
         Student student = new Student(name, age, email, studentId, grade);
         students.add(student);
         JDBC.insertStudentIntoDatabase(student);
@@ -60,21 +64,22 @@ public class StudentManagement {
             return;
         }
 
-        int mid = students.size() / 2;
+        List<Student> studentsCopy = new ArrayList<>(students);
 
+        int mid = students.size() / 2;
         int task1EndIndex = (students.size() % 2 == 0) ? mid : mid + 1;
 
         Runnable task1 = () -> {
             System.out.println("\nFirst half of students:");
             for (int i = 0; i < task1EndIndex; i++) {
-                System.out.println(students.get(i));
+                System.out.println(studentsCopy.get(i));
             }
         };
 
         Runnable task2 = () -> {
             System.out.println("\nSecond half of students:");
             for (int i = task1EndIndex; i < students.size(); i++) {
-                System.out.println(students.get(i));
+                System.out.println(studentsCopy.get(i));
             }
         };
 
@@ -110,6 +115,59 @@ public class StudentManagement {
         filteredStudents.forEach(student -> System.out.println(student.getName() + " - " + student.getGrade()));
     }
 
+    public void updateStudent() {
+        System.out.print("Enter the ID of the student you would like to update: ");
+        int studentID = scanner.nextInt();
+        scanner.nextLine();
+
+        Student student = findStudentById(studentID);
+
+        if (student != null) {
+            System.out.println("Student found: " + student);
+            System.out.print("Enter new name or press Enter to keep the same: ");
+            String name = scanner.nextLine();
+            if (!name.isEmpty())student.setName(name);
+
+            System.out.print("Enter new age or press Enter to keep the same: ");
+            String ageStr = scanner.nextLine();
+            if (!ageStr.isEmpty())student.setAge(Integer.parseInt(ageStr));
+
+            System.out.print("Enter new email or press Enter to keep the same: ");
+            String email = scanner.nextLine();
+            if (!email.isEmpty())student.setEmail(email);
+
+            System.out.print("Enter new grade or press Enter to keep the same: ");
+            String gradeStr = scanner.nextLine();
+            if (!gradeStr.isEmpty())student.setGrade(Integer.parseInt(gradeStr));
+
+            JDBC.updateStudentInDatabase(student);
+            System.out.println("Student updated successfully");
+        }
+        else {
+            System.out.print("Student not found.");
+        }
+    }
+
+    public void deleteStudent() {
+        System.out.print("Enter student ID to delete: ");
+        int studentId = scanner.nextInt();
+
+        Student student = findStudentById(studentId);
+        if (student != null) {
+            students.remove(student);
+            JDBC.deleteStudentFromDatabase(studentId);
+            System.out.println("Student deleted successfully.");
+        }
+        else {
+            System.out.println("Student not found.");
+        }
+    }
+
+    private Student findStudentById(int studentId) {
+        return students.stream().filter(student -> student.getStudentId() == studentId).findFirst().orElse(null);
+    }
+
+
     public void displayMenu() {
         while (true) {
             System.out.println("\nStudent Management System Menu");
@@ -122,7 +180,9 @@ public class StudentManagement {
             System.out.println("7. Import Teachers from File");
             System.out.println("8. Count Students by Grade");
             System.out.println("9. Filter and Sort Students by Grade");
-            System.out.println("10. Exit");
+            System.out.println("10. Update Student");
+            System.out.println("11. Delete Student");
+            System.out.println("12. Exit");
             System.out.print("Enter your choice: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -156,6 +216,12 @@ public class StudentManagement {
                     filterAndSortStudents();
                     break;
                 case 10:
+                    updateStudent();
+                    break;
+                case 11:
+                    deleteStudent();
+                    break;
+                case 12:
                     System.exit(0);
                     break;
                 default:

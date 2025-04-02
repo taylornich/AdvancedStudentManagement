@@ -1,4 +1,5 @@
 import java.io.*;
+import java.sql.PreparedStatement;
 import java.util.List;
 
 public class FileManager {
@@ -37,8 +38,14 @@ public class FileManager {
                 int age = Integer.parseInt(data[2]);
                 String email = data[3];
                 int grade = Integer.parseInt(data[4]);
-                students.add(new Student(name, age, email, studentId, grade));
-                JDBC.insertStudentIntoDatabase(new Student(name, age, email, studentId, grade));
+
+                if (!JDBC.studentExistsInDatabase(studentId)) {
+                    Student newStudent = new Student(name, age, email, studentId, grade);
+                    JDBC.insertStudentIntoDatabase(newStudent);
+                }
+                else {
+                    System.out.println("Student with ID " + studentId + " already exists.");
+                }
             }
             System.out.println("Students data imported from students.txt.");
         } catch (IOException e) {
@@ -56,8 +63,13 @@ public class FileManager {
                 int age = Integer.parseInt(data[2]);
                 String email = data[3];
                 String subject = data[4];
-                teachers.add(new Teacher(name, age, email, teacherId, subject));
-                JDBC.insertTeacherIntoDatabase(new Teacher(name, age, email, teacherId, subject));
+                if (!JDBC.teacherExistsInDatabase(teacherId)) {
+                    Teacher newTeacher = new Teacher(name, age, email, teacherId, subject);
+                    JDBC.insertTeacherIntoDatabase(newTeacher);
+                }
+                else {
+                    System.out.println("Teacher with ID " + teacherId + " already exists.");
+                }
             }
             System.out.println("Teachers data imported from teachers.txt.");
         } catch (IOException e) {
